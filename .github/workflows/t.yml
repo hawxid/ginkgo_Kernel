@@ -1,39 +1,36 @@
-name: Cherry-pick Specific Commit
+name: Extract Commit Patch
 
 on:
-  # Memungkinkan kamu menjalankan workflow secara manual dari tab Actions
   workflow_dispatch:
 
 jobs:
-  cherry-pick-job:
+  extract-patch:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          # Gunakan PAT agar bisa push ke repo
           token: ${{ secrets.PAT_TOKEN }}
-          # Ambil semua history commit agar cherry-pick bisa berjalan
-          fetch-depth: 0
 
       - name: Configure Git
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-      - name: Add remote source repository
+      - name: Fetch source repository
         run: |
-          # Tambahkan repo sumber sebagai remote
           git remote add source https://github.com/ikteach/ginkgo_Kernel.git
-          # Ambil data terbaru dari repo sumber
           git fetch source
 
-      - name: Cherry-pick the commit
+      - name: Generate patch file
         run: |
-          # Lakukan cherry-pick pada commit yang dituju
-          git cherry-pick 710270b6babdac2ac33423d7c00d0d5f757231e7
+          # Buat folder khusus buat nyimpen patch
+          mkdir -p patches
+          # Ekstrak commit jadi file .patch
+          git format-patch -1 710270b6babdac2ac33423d7c00d0d5f757231e7 -o patches
 
-      - name: Push changes
+      - name: Commit and Push patch
         run: |
-          # Push hasil cherry-pick ke branch saat ini di repo fork-mu
+          git add patches/
+          git commit -m "Add patch file for commit 710270b"
           git push origin HEAD
